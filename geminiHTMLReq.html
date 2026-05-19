@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מדריך: כיצד לבקש מה-AI לייצר קובץ HTML מושלם</title>
+    <!-- טעינת מנוע מתמטי לרנדור נוסחאות למקרה שיהיה בהן צורך בעתיד -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.7;
+            margin: 40px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 12px;
+            font-size: 2em;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 35px;
+            font-size: 1.4em;
+        }
+        p {
+            font-size: 1.05em;
+            margin-bottom: 20px;
+        }
+        .prompt-box {
+            background-color: #ebf5fb;
+            border-right: 6px solid #3498db;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+            font-style: italic;
+        }
+        ul {
+            padding-right: 20px;
+            margin-bottom: 25px;
+        }
+        li {
+            margin-bottom: 10px;
+            font-size: 1.05em;
+        }
+        strong {
+            color: #2c3e50;
+        }
+        .step {
+            background: #fdfefe;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+        @media print {
+            body { background: white; margin: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>כיצד לבקש מהבינה המלאכותית לייצר קובץ HTML מהצ'אט?</h1>
+    <p>כדי לקבל קובץ מוכן, מעוצב ונוח להדפסה כבר בניסיון הראשון (בלי "פינג-פונג" מתיש של שאלות ותשובות), מומלץ להגדיר את הדרישות הטכניות מראש בתוך השאלה שלך.</p>
+
+    <h2>נוסח הבקשה המומלץ לעתיד ("פרומפט קסם")</h2>
+    <p>בפעם הבאה שתרצה סיכום או הוכחה, פתח את הצ'אט והעתק את הנוסח הבא:</p>
+    
+    <div class="prompt-box">
+        "אני צריך הסבר מפורט על <strong>[הנושא שלך כאן]</strong>. <br>
+        אל תכתוב לי טקסט רגיל בצ'אט. במקום זאת, תעטוף את כל התשובה וההסברים בתוך <strong>קובץ HTML מלא (בתוך קוד בלוק יחיד)</strong> שכולל:<br>
+        1. מבנה HTML מלא עם תגיות head, body ועיצוב CSS מובנה, נקי ומודרני (תמיכה ב-RTL לעברית).<br>
+        2. טעינת סקריפט MathJax בתוך ה-head כדי שכל הנוסחאות המתמטיות ירונדרו בצורה גרפית מושלמת.<br>
+        3. חלוקה ברורה לכותרות, פסקאות וטבלאות/רשימות במידת הצורך."
+    </div>
+
+    <h2>למה הניסוח הזה עובד מיד ובצורה חלקה?</h2>
+    <ul>
+        <li><strong>קוד בלוק יחיד:</strong> מונע מה-AI לפצל את התשובה לחלקים שונים ומציג לך כפתור "העתק" (Copy) אחד קטן שמעתיק את הכל בבת אחת.</li>
+        <li><strong>מנוע MathJax מובנה:</strong> זה הסוד שגורם לנוסחאות המתמטיות להיראות כמו בספר לימוד (עם אותיות לטיניות ואינדקסים קטנים תחתיים) ולא כמו בליל של תווים מסורבלים כשאתה פותח את הקובץ במחשב.</li>
+        <li><strong>עיצוב CSS מותאם:</strong> מבטיח שהדף יהיה קריא, מרווח, מיושר לימין (RTL) ונוח להדפסה ישירה ל-PDF ללא שורות חתוכות.</li>
+    </ul>
+
+    <h2>תזכורת: איך הופכים את הקוד לקובץ PDF ב-15 שניות?</h2>
+    <div class="step">
+        <strong>שלב 1:</strong> מעתיקים את הקוד שנוצר בצ'אט (בעזרת כפתור ה-Copy).
+    </div>
+    <div class="step">
+        <strong>שלב 2:</strong> פותחים את פנקס הרשימות במחשב (Notepad), מדביקים את הקוד ושומרים בשם <code>myfile.html</code> (חשוב לוודא שהסיומת היא html ולא txt).
+    </div>
+    <div class="step">
+        <strong>שלב 3:</strong> פותחים את הקובץ בגוגל כרום, לוחצים <code>Ctrl + P</code> ושומרים כ-PDF מלא ורציף.
+    </div>
+</div>
+
+</body>
+</html>

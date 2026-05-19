@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סיכום מלא: הוכחת נוסחת המטרה של SVM</title>
+    <!-- טעינת מנוע מתמטי לרנדור נוסחאות נקיות -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #34495e;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #16a085;
+        }
+        .formula {
+            background-color: #f4f6f7;
+            padding: 15px;
+            border-right: 5px solid #2980b9;
+            margin: 15px 0;
+            font-size: 1.1em;
+            overflow-x: auto;
+        }
+        .highlight {
+            background-color: #fff9db;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        @media print {
+            body { background: white; margin: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>מדריך מלא: הוכחת נוסחת המטרה של SVM</h1>
+    <p>מסמך זה מרכז את כל שלבי המעבר מבעיית המינימום הראשונית של אלגוריתם ה-Support Vector Machine ועד להגעה לנוסחת הדוּאל הסופית \( \max(L) \).</p>
+
+    <h2>1. הרקע: מה אנחנו מנסים לפתור? (The Primal Problem)</h2>
+    <p>ב-SVM ליניארי קשיח (Hard Margin), המטרה היא למצוא על-מישור (Hyperplane) שמפריד בין שתי מחלקות בצורה האופטימלית ביותר. האופטימליות הזו נמדדת לפי <strong>המרווח (Margin)</strong> – המרחק בין קו ההפרדה לבין הנקודות הקרובות אליו ביותר (וקטורי התמיכה).</p>
+    <p>מבחינה מתמטית, מציאת המרווח המקסימלי שקולה ל<strong>מיזעור</strong> אורך וקטור המשקולות \( w \). משיקולי נוחות של גזירה, אנו מגדירים את בעיית המינימום המקורית כך:</p>
+    
+    <div class="formula">
+        $$\min_{w, b} \frac{1}{2} \|w\|^2$$
+    </div>
+
+    <p><strong>האילוץ עבור כל דוגמה \( i \):</strong> אנו דורשים שכל נקודה תסווג נכון ותהיה מחוץ למרווח (כאשר \( y_i \) הוא סימון המחלקה, \( 1 \) או \( -1 \)):</p>
+    <div class="formula">
+        $$y_i (w \cdot x_i + b) \ge 1 \quad \forall i = 1, \dots, n$$
+    </div>
+
+    <p>נעביר אגף כדי להביא את האילוץ לצורה הסטנדרטית של אופטימיזציה (\( g_i(w,b) \le 0 \)):</p>
+    <div class="formula">
+        $$1 - y_i (w \cdot x_i + b) \le 0$$
+    </div>
+
+    <h2>2. בניית פונקציית הלגראנז' (The Lagrangian)</h2>
+    <p>כדי לפתור בעיית מינימום עם אילוצים קשיחים, משתמשים ב<strong>חוק לגראנז' הכללי</strong>:</p>
+    <div class="formula">
+        $$L = f(x) + \alpha \cdot g(x)$$
+    </div>
+    <p>החוק מאפשר לקחת בעיה עם אילוצים קשיחים ולהפוך אותה למשוואה רציפה אחת חופשית על ידי הוספת "קנסות חכמים". אנו מחברים לפונקציית המטרה המקורית את האילוצים של כל הדוגמאות, כשהם מוכפלים בכופלי לגראנז' \( \alpha_i \) (כאשר מתקיים האילוץ הבסיסי \( \alpha_i \ge 0 \)).</p>
+    
+    <div class="formula">
+        $$L(w, b, \alpha) = \frac{1}{2} \|w\|^2 + \sum_{i=1}^{n} \alpha_i \Big[ 1 - y_i (w \cdot x_i + b) \Big]$$
+    </div>
+
+    <p>נפתח את הסוגריים באופן מלא כדי להקל על הגזירה בשלב הבא:</p>
+    <div class="formula">
+        $$L(w, b, \alpha) = \frac{1}{2} \|w\|^2 + \sum_{i=1}^{n} \alpha_i - \sum_{i=1}^{n} \alpha_i y_i (w \cdot x_i) - \sum_{i=1}^{n} \alpha_i y_i b$$
+    </div>
+
+    <p>מכיוון ש-\( b \) הוא איבר קבוע שאינו תלוי באינדקס הריצה \( i \), נוציא אותו מחוץ לסכום האחרון:</p>
+    <div class="formula">
+        $$L(w, b, \alpha) = \frac{1}{2} \|w\|^2 + \sum_{i=1}^{n} \alpha_i - \sum_{i=1}^{n} \alpha_i y_i (w \cdot x_i) - b \sum_{i=1}^{n} \alpha_i y_i$$
+    </div>
+
+    <h2>3. גזירה ומציאת תנאי האופטימליות (KKT Conditions)</h2>
+    <p>בנקודת האופטימום, הנגזרות החלקיות של פונקציית הלגראנז' לפי המשתנים המקוריים (\( b \) ו-\( w \)) חייבות להיות שוות ל-0.</p>
+
+    <h3>א. גזירה לפי ה-Bias (\( b \)):</h3>
+    <p>האיבר היחיד שבו מופיע \( b \) הוא האיבר האחרון. נגזור ונשווה לאפס:</p>
+    <div class="formula">
+        $$ \frac{\partial L}{\partial b} = -\sum_{i=1}^{n} \alpha_i y_i = 0 $$
+    </div>
+    <p>מכאן אנו מקבלים את האילוץ הדואלי ההכרחי הראשון:</p>
+    <div class="formula">
+        $$\text{[תנאי 1]} \quad \sum_{i=1}^{n} \alpha_i y_i = 0$$
+    </div>
+
+    <h3>ב. גזירה לפי וקטור המשקולות (\( w \)):</h3>
+    <p>נזכור כי הנגזרת של \( \frac{1}{2}\|w\|^2 \) לפי הווקטור \( w \) היא פשוט \( w \). נגזור ונשווה לאפס:</p>
+    <div class="formula">
+        $$ \frac{\partial L}{\partial w} = w - \sum_{i=1}^{n} \alpha_i y_i x_i = 0 $$
+    </div>
+    <p>מכאן אנו מקבלים ביטוי מפורש לערכו של \( w \) בנקודת האופטימום:</p>
+    <div class="formula">
+        $$\text{[תנאי 2]} \quad w = \sum_{i=1}^{n} \alpha_i y_i x_i$$
+    </div>
+
+    <h2>4. הצבה בחזרה ומעבר לבעיית הדוּאל</h2>
+    <p>כעת, כדי לקבל את נוסחת המטרה הסופית שתלויה אך ורק במשתני ה-\( \alpha \), נציב את שני התנאים שחילצנו בשלב 3 בחזרה לתוך פונקציית הלגראנז' המורחבת משלב 2:</p>
+
+    <h3>1. ביטול האיבר של \( b \):</h3>
+    <p>מכיוון שראינו לפי תנאי 1 ש-\( \sum \alpha_i y_i = 0 \), האיבר האחרון \( -b \sum \alpha_i y_i \) הופך ל-\( -b \cdot 0 \), מתאפס לחלוטין ונמחק מהמשוואה.</p>
+
+    <h3>2. הצבת \( w \) באיבר הראשון (\( \frac{1}{2} \|w\|^2 \)):</h3>
+    <div class="formula">
+        $$\frac{1}{2} \|w\|^2 = \frac{1}{2} (w \cdot w) = \frac{1}{2} \left( \sum_{i=1}^{n} \alpha_i y_i x_i \right) \cdot \left( \sum_{j=1}^{n} \alpha_j y_j x_j \right)$$
+    </div>
+    <p>נפתח את המכפלה הזו לסכום כפול המעריך את כל זוגות האינדקסים \( i \) ו-\( j \):</p>
+    <div class="formula">
+        $$\frac{1}{2} \sum_{i=1}^{n} \sum_{j=1}^{n} \alpha_i \alpha_j y_i y_j (x_i \cdot x_j)$$
+    </div>
+
+    <h3>3. הצבת \( w \) באיבר השלישי:</h3>
+    <div class="formula">
+        $$-\sum_{i=1}^{n} \alpha_i y_i (w \cdot x_i) = -\sum_{i=1}^{n} \alpha_i y_i \left( \sum_{j=1}^{n} \alpha_j y_j x_j \cdot x_i \right) = -\sum_{i=1}^{n} \sum_{j=1}^{n} \alpha_i \alpha_j y_i y_j (x_i \cdot x_j)$$
+    </div>
+
+    <h3>4. חיבור איברי הסכום הכפול:</h3>
+    <p>קיבלנו שני רכיבים בעלי סכום כפול זהה לחלוטין: הראשון עם מקדם של פלוס חצי (\( \frac{1}{2} \)), והשני עם מקדם של מינוס שלם (\( -1 \)). נחבר אותם יחד (חצי פחות שלם שווה למינוס חצי):</p>
+    <div class="formula">
+        $$\frac{1}{2} \sum_{i=1}^{n} \sum_{j=1}^{n} \alpha_i \alpha_j y_i y_j (x_i \cdot x_j) - \sum_{i=1}^{n} \sum_{j=1}^{n} \alpha_i \alpha_j y_i y_j (x_i \cdot x_j) = -\frac{1}{2} \sum_{i=1}^{n} \sum_{j=1}^{n} \alpha_i \alpha_j y_i y_j (x_i \cdot x_j)$$
+    </div>
+
+    <h2>5. נוסחת המטרה הסופית של SVM (\( \max L \))</h2>
+    <p>על פי תורת הדואליות באופטימיזציה, לאחר שהצבנו את ערכי המינימום של המשתנים המקוריים, הבעיה מתהפכת והופכת לבעיית <strong>מקסימום</strong> עבור משתני הדוּאל (\( \alpha \)).</p>
+    <p>אם נאסוף את האיברים שנותרו לנו (סכום ה-\( \alpha_i \) הבודדים ואיבר הסכום הכפול השלילי), נגיע בדיוק לנוסחת המטרה המפורסמת של SVM:</p>
+
+    <div class="formula">
+        $$\max_{\alpha} \sum_{i=1}^{n} \alpha_i - \frac{1}{2} \sum_{i=1}^{n} \sum_{j=1}^{n} \alpha_i \alpha_j y_i y_j (x_i \cdot x_j)$$
+    </div>
+
+    <p><strong>תחת האילוצים שחייבים להתקיים:</strong></p>
+    <ol>
+        <li>\( \sum_{i=1}^{n} \alpha_i y_i = 0 \) (התנאי שאיפס את איבר ה-\( b \))</li>
+        <li>\( \alpha_i \ge 0 \quad \forall i=1,\dots,n \) (התנאי הבסיסי לכופלי לגראנז')</li>
+    </ol>
+
+    <h2>6. מקרא משתנים ואינטואיציה</h2>
+    <ul>
+        <li><strong>\( \alpha_i \) (כופלי לגראנז'):</strong> מייצגים את החשיבות של כל דוגמה. עבור הרוב המוחלט של הדוגמאות יתקבל \( \alpha_i = 0 \) והן יימחקו מהחישוב. רק עבור <strong>וקטורי התמיכה</strong> (הנקודות הקרובות ביותר למרווח) יתקבל \( \alpha_i > 0 \).</li>
+        <li><strong>\( y_i y_j \):</strong> מכפלת התוויות. הערך יהיה \( 1 \) אם שתי הנקודות מאותה מחלקה, ו-\( -1 \) אם הן ממחלקות שונות.</li>
+        <li><strong>\( (x_i \cdot x_j) \):</strong> המכפלה הסקלרית (Dot Product) המודדת את הדמיון הגיאומטרי בין שתי נקודות. זהו הבסיס ל<strong>טריק הקרנל (Kernel Trick)</strong> – במידה והנתונים אינם ניתנים להפרדה ליניארית, מחליפים את המכפלה הזו בפונקציית קרנל \( K(x_i, x_j) \) מבלי לשנות את מבנה הנוסחה.</li>
+    </ul>
+</div>
+
+</body>
+</html>

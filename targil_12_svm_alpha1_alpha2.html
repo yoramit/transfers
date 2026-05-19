@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אלגוריתם SMO עבור SVM - מדריך מפורט</title>
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --container-bg: #ffffff;
+            --primary-color: #1e3a8a;
+            --secondary-color: #2563eb;
+            --text-color: #334155;
+            --text-dark: #0f172a;
+            --border-color: #e2e8f0;
+            --accent-bg: #f1f5f9;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: var(--container-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            border-bottom: 3px solid var(--secondary-color);
+            padding-bottom: 12px;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            border-right: 4px solid var(--secondary-color);
+            padding-right: 10px;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            font-size: 1.05rem;
+        }
+
+        .math-block {
+            background-color: var(--accent-bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        ul, ol {
+            margin-bottom: 1.5rem;
+            padding-right: 25px;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+
+        .note {
+            background-color: #eff6ff;
+            border-right: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container tex2jax_process">
+    <h1>ניתוח ופתרון אלגוריתם SMO עבור SVM</h1>
+    
+    <p>אלגוריתם <strong>SMO (Sequential Minimal Optimization)</strong> הוא כלי יעיל ביותר לפתרון בעיית האופטימיזציה הריבועית (QP) הנובעת מניסוח הדואלי של SVM. הרעיון המרכזי הוא פירוק הבעיה הגדולה לתתי-בעיות קטנות ביותר, כאשר בכל שלב אנו מבצעים אופטימיזציה עבור <strong>שני כפלי לגרנז' בלבד ($\alpha_1, \alpha_2$)</strong>, ומחזיקים את כל השאר כקבועים. צעד זה מאפשר פתרון אנליטי מהיר ללא צורך במפתרי QP מורכבים.</p>
+
+    <h2>(א) צמצום הבעיה לשני משתנים ($\alpha_1, \alpha_2$)</h2>
+    <p>בהינתן בעיית המקסימום הדואלית המקורית, אנו מתייחסים לכל המשתנים $ \alpha_n $ עבור $ n \ge 3 $ כקבועים. נגזור תחילה את אילוץ השוויון החדש:</p>
+    
+    <p>מתוך אילוץ השוויון הכללי $ \sum_{n=1}^N y_n \alpha_n = 0 $, נפריד את שני האיברים הראשונים:</p>
+    <div class="math-block">
+        $$y_1 \alpha_1 + y_2 \alpha_2 + \sum_{n=3}^N y_n \alpha_n = 0$$
+    </div>
+    
+    <p>נכפיל את שני אגפי המשוואה ב-$y_1$ (נזכור כי $y_1 \in \{-1, +1\}$ ולכן $y_1^2 = 1$):</p>
+    <div class="math-block">
+        $$\alpha_1 + y_1 y_2 \alpha_2 + y_1 \sum_{n=3}^N y_n \alpha_n = 0$$
+    </div>
+    
+    <p>נגדיר את הקבועים כמבוקש: $s = y_1 y_2$ וכן $\gamma = -y_1 \sum_{n=3}^N y_n \alpha_n$. מכאן נקבל את אילוץ הקו הישר המבוקש:</p>
+    <div class="math-block">
+        $$\alpha_1 + s \alpha_2 = \gamma$$
+    </div>
+
+    <p>כעת, נצמצם את פונקציית המטרה $W(\alpha)$ על ידי בידוד האיברים התלויים ב-1 ו-2 בלבד:</p>
+    <ul>
+        <li><span class="highlight">איברים ריבועיים טהורים:</span> $-\frac{1}{2} K_{11} \alpha_1^2 - \frac{1}{2} K_{22} \alpha_2^2 - s K_{12} \alpha_1 \alpha_2$ (כאשר השתמשנו ב-$y_1 y_2 = s$).</li>
+        <li><span class="highlight">איברים מעורבים (אינטראקציה עם שאר הנתונים הקבועים):</span> $-y_1 \alpha_1 v_1 - y_2 \alpha_2 v_2$, כאשר הגדרנו $v_i = \sum_{j=3}^N y_j \alpha_j K_{ij}$.</li>
+        <li><span class="highlight">החלק הליניארי:</span> $\alpha_1 + \alpha_2$.</li>
+    </ul>
+    
+    <p>שילוב כל הרכיבים הללו (והשמטת האיברים התלויים ב-$n \ge 3$ בלבד, כיוון שהם קבועים ולא משפיעים על נקודת המקסימום) נותן לנו בדיוק את הפונקציה המצומצמת:</p>
+    <div class="math-block">
+        $$\psi_1(\alpha_1, \alpha_2) = -\frac{1}{2}K_{11}\alpha_1^2 - \frac{1}{2}K_{22}\alpha_2^2 - sK_{12}\alpha_1\alpha_2 - y_1\alpha_1v_1 - y_2\alpha_2v_2 + \alpha_1 + \alpha_2$$
+    </div>
+
+    <h2>(ב) מציאת נקודת המקסימום האנליטית עבור $\alpha_2$</h2>
+    <p>כדי למצוא את המקסימום ללא אילוצי הקופסה, נציב את האילוץ הליניארי שחולץ בסעיף א': $\alpha_1 = \gamma - s\alpha_2$ לתוך פונקציית המטרה $\psi_1$. נקבל פונקציה $\psi_2(\alpha_2)$ התלויה במשתנה יחיד.</p>
+    
+    <p>לאחר הצבה ופתיחת סוגריים, נאסוף את המקדמים לפי חזקות של $\alpha_2$:</p>
+    <ul>
+        <li>המקדם של $\alpha_2^2$ הוא: $-\frac{1}{2}(K_{11} + K_{22} - 2K_{12}) = -\frac{1}{2}\eta$.</li>
+        <li>המקדם הליניארי של $\alpha_2$ הוא: $s(K_{11} - K_{12})\gamma + y_2(v_1 - v_2) - s + 1$.</li>
+    </ul>
+
+    <p>נגזור את הפונקציה לפי $\alpha_2$ ונשווה לאפס לקבלת נקודת הקיצון:</p>
+    <div class="math-block">
+        $$\frac{d\psi_2}{d\alpha_2} = -\eta \alpha_2 + s(K_{11} - K_{12})\gamma + y_2(v_1 - v_2) - s + 1 = 0$$
+    </div>
+    
+    <p>נחלץ את $\alpha_2$ ונקבל את הביטוי האנליטי המבוקש:</p>
+    <div class="math-block">
+        $$\alpha_2 = \frac{s(K_{11} - K_{12})\gamma + y_2(v_1 - v_2) - s + 1}{\eta}$$
+    </div>
+
+    <h2>(ג) הוכחת הקשר עבור $v_1 - v_2$</h2>
+    <p>פונקציית החיזוי של המודל במצב הנוכחי (לפני הצעד האופטימלי) מוגדרת כ:</p>
+    <div class="math-block">
+        $$f(\mathbf{x}) = \sum_{n=1}^N y_n \alpha_n^* K_{nx} + b^*$$
+    </div>
+    
+    <p>נחשב את ערך הפונקציה בנקודות הקיצוניות $\mathbf{x}_1$ ו-$\mathbf{x}_2$ על ידי הפרדת שני האיברים הראשונים בסכום:</p>
+    <div class="math-block">
+        $$f(\mathbf{x}_1) = y_1 \alpha_1^* K_{11} + y_2 \alpha_2^* K_{12} + v_1 + b^*$$
+        $$f(\mathbf{x}_2) = y_1 \alpha_1^* K_{12} + y_2 \alpha_2^* K_{22} + v_2 + b^*$$
+    </div>
+    
+    <p>נחסיר את המשוואות ונבודד את הביטוי $v_1 - v_2$:</p>
+    <div class="math-block">
+        $$v_1 - v_2 = f(\mathbf{x}_1) - f(\mathbf{x}_2) - y_1 \alpha_1^* (K_{11} - K_{12}) - y_2 \alpha_2^* (K_{12} - K_{22})$$
+    </div>
+    
+    <p>נציב את אילוץ השוויון של המצב הקודם $y_1 \alpha_1^* = y_1 \gamma - y_2 \alpha_2^*$. לאחר סידור וקיבוץ איברים לפי הגדרת $\eta$, נקבל את הקשר המדויק:</p>
+    <div class="math-block">
+        $$v_1 - v_2 = f(\mathbf{x}_1) - f(\mathbf{x}_2) + \alpha_2^* y_2 \eta - s y_2 \gamma (K_{11} - K_{12})$$
+    </div>
+
+    <h2>(ד) גזירת נוסחת העדכון המבוססת על שגיאות החיזוי</h2>
+    <p>נציב את הביטוי שקיבלנו עבור $v_1 - v_2$ בסעיף ג' חזרה לתוך משוואת הקיצון מסעיף ב':</p>
+    <div class="math-block">
+        $$\eta \alpha_2 = s(K_{11} - K_{12})\gamma + y_2 \left[ f(\mathbf{x}_1) - f(\mathbf{x}_2) + \alpha_2^* y_2 \eta - s y_2 \gamma (K_{11} - K_{12}) \right] - s + 1$$
+    </div>
+    
+    <p>נשים לב כי האיברים המכילים את $\gamma$ מצמצמים זה את זה לחלוטין מכיוון ש-$y_2 \cdot (-s y_2 \gamma \dots) = -s \gamma \dots$. נותרנו עם:</p>
+    <div class="math-block">
+        $$\eta \alpha_2 = \eta \alpha_2^* + y_2 \left( f(\mathbf{x}_1) - f(\mathbf{x}_2) \right) + 1 - s$$
+    </div>
+    
+    <p>מכיוון ש-$1 - s = y_2(y_2 - y_1)$, ניתן להוציא את $y_2$ כגורם משותף ולסדר מחדש את האיברים באמצעות הגדרת שגיאות החיזוי המוכרות:</p>
+    <div class="math-block">
+        $$\alpha_2 = \alpha_2^* + y_2 \frac{(y_2 - f(\mathbf{x}_2)) - (y_1 - f(\mathbf{x}_1))}{\eta}$$
+    </div>
+
+    <h2>(ה) חיתוך (Clipping) וגזירת החסמים עבור $s = +1$</h2>
+    
+    <div class="note">
+        <strong>למה נדרש חיתוך (Clipping)?</strong><br>
+        נוסחת העדכון שמצאנו בסעיף ד' מתחשבת אך ורק באילוץ השוויון הליניארי. עם זאת, בבעיית ה-SVM קיימים גם אילוצי קופסה קשיחים: $0 \le \alpha_n \le C$. כיוון ש-$\alpha_1$ משתנה אוטומטית בהתאם ל-$\alpha_2$, עלינו לוודא ששני הערכים החדשים יישארו בתוך תחומי הריבוע $[0,C] \times [0,C]$. חיתוך הערך האנליטי מבטיח שהפתרון יישאר חוקי.
+    </div>
+
+    <p><strong>גזירת החסמים $L$ ו-$H$ עבור המקרה $s = +1$:</strong></p>
+    <p>כאשר $s = y_1 y_2 = +1$, המשמעות היא ששני התיוגים זהים ($y_1 = y_2$). אילוץ השוויון הופך ל:</p>
+    <div class="math-block">
+        $$\alpha_1 + \alpha_2 = \gamma \implies \alpha_1 = \gamma - \alpha_2$$
+    </div>
+    
+    <p>נציב קשר זה לתוך אילוצי התחום של $\alpha_1$:</p>
+    <div class="math-block">
+        $$0 \le \gamma - \alpha_2 \le C \implies \gamma - C \le \alpha_2 \le \gamma$$
+    </div>
+    
+    <p>במקביל, נשבב את אילוצי התחום הישירים של המשתנה עצמו $0 \le \alpha_2 \le C$. שילוב שני התנאים יחד מכתיב את גבולות החיתוך הבאים:</p>
+    <ul>
+        <li><span class="highlight">החסם התחתון ($L$):</span> החסם התחתון המקסימלי האפשרי: $L = \max(0, \gamma - C)$. מכיוון ש-$\gamma = \alpha_1^* + \alpha_2^*$, נקבל: $L = \max(0, \alpha_1^* + \alpha_2^* - C)$.</li>
+        <li><span class="highlight">החסם העליון ($H$):</span> החסם העליון המינימלי האפשרי: $H = \min(C, \gamma) = \min(C, \alpha_1^* + \alpha_2^*)$.</li>
+    </ul>
+</div>
+
+</body>
+</html>
